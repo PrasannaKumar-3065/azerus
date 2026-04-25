@@ -1,0 +1,7 @@
+{
+  "name": "azerus",
+  "version": "1.0.0",
+  "bin": {
+    "azerus run": "./index.js"
+  }
+}
