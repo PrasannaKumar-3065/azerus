@@ -1,7 +1,10 @@
 {
   "name": "azerus",
   "version": "1.0.0",
+  "description": "A basic CLI tool",
+  "main": "src/index.js",
   "bin": {
-    "azerus run": "./index.js"
-  }
+    "azerus run": "./bin/cli.js"
+  },
+  "type": "module"
 }
