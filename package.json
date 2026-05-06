@@ -4,7 +4,7 @@
   "description": "A basic CLI tool",
   "main": "src/index.js",
   "bin": {
-    "azerus run": "./bin/cli.js"
+    "azerus": "./bin/cli.js"
   },
   "type": "module"
 }
