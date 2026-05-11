@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 
-const { Command } = require('commander');
-const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
-const inquirer = require('inquirer');
+import { Command } from 'commander';
+import { execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
+import inquirer from 'inquirer';
+import chalk from 'chalk';
 
 const program = new Command();
 
@@ -46,15 +47,28 @@ program
                 message: 'Enter GitHub username:',
                 validate: async (input) => {
                     if (!input) return 'Username is required';
-                    // Optional: fetch validation here
-                    return true;
+                    var res = await fetch(`https://api.github.com/users/${input}`)
+                    return res.ok ? true : 'Username doesnot exist.'
                 }
             },
             {
                 type: 'password',
                 name: 'token',
                 message: 'Enter GitHub token:',
-                mask: '#'
+                mask: '#',
+                validate: async (input) => {
+                    if (!input) return 'Token is required';
+                    var res = await fetch(`https://api.github.com/user`, {
+                        headers: {
+                            Authorization: `Bearer ${input}`
+                        }
+                    })
+                    if (!res.ok) return 'Invalid Auth token.'
+
+                    let json = await res.json()
+                    console.log(chalk.blue(res.status))
+                    return json.ok ? true : 'Invalid Auth token for given user.'
+                }
             }
         ]);
 

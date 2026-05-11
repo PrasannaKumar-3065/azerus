@@ -4,11 +4,14 @@
   "description": "A basic CLI tool",
   "main": "src/index.js",
   "bin": {
-    "azerus": "./bin/cli.js"
+    "cli": "./src/index.js",
+    "todo": "./src/hello.js"
   },
   "type": "module",
   "dependencies": {
+    "chalk": "^5.6.2",
     "commander": "^14.0.3",
+    "enquirer": "^2.4.1",
     "inquirer": "^13.4.2"
   }
 }
