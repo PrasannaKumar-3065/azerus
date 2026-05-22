@@ -9,6 +9,7 @@ import inquirer from 'inquirer';
 import chalk from 'chalk';
 import readline from 'readline';
 import ollamaHandler from './llm_handlers/ollama.js';
+import automationAgent from './agents/automation.js';
 const program = new Command();
 
 program
@@ -51,6 +52,14 @@ program
         rl.on('close', () => {
             process.exit(0);
         });
+    });
+
+program
+    .command('automation')
+    .description('Enter a live, interactive sub-shell session with your agent')
+    .argument('[path]', 'path for instruction file.')
+    .action(async (filePath) => {
+        await automationAgent(filePath)
     });
 
 program.parse();
