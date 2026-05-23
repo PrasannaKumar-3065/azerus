@@ -96,6 +96,25 @@ const availableTools = {
     }
     return `Page scrolled ${direction} successfully`
   },
+  select: async ({ selector, value, page }) => {
+    const element = page.locator(selector);
+    const count = await element.count();
+
+    if (count > 1) {
+      return `Multiple elements found (${count}) for this selector (${selector}). Please use a unique selector.`;
+    }
+    if (count === 0) {
+      return `Element not found for selector: ${selector}`;
+    }
+
+    try {
+      // Select by label (the visible text of the option)
+      await element.selectOption({ label: value });
+      return `Option '${value}' selected in ${selector} successfully`;
+    } catch (error) {
+      return `Failed to select option '${value}' in ${selector}. The option might not exist.`;
+    }
+  },
   finish: async ({ summary }) => {
     return `SUCCESS: ${summary}`
   }
@@ -173,6 +192,21 @@ const tools = [
         required: ['summary']
       }
     }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'select',
+      description: 'Call this tool for changing values for select input.',
+      parameters: {
+        type: 'object',
+        properties: {
+          selector: { type: 'string', description: 'Unique CSS selector for the input element.' },
+          value: { type: 'string', description: 'The text string to insert into the element.' },
+        },
+        required: ['selector', 'value']
+      }
+    }
   }
 ]
 
@@ -188,17 +222,6 @@ const ollamaAutomationHandler = async (model, prompt, history = [], page='', emb
       // 1. Process standard non-table elements
       let elementCount = 0
       elements.forEach((el) => {
-        const rect = el.getBoundingClientRect()
-        const isInViewport = (
-          rect.top >= 0 &&
-          rect.left >= 0 &&
-          rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-          rect.right <= (window.innerWidth || document.documentElement.clientWidth) &&
-          rect.width > 0 &&
-          rect.height > 0
-        )
-
-        if (isInViewport) {
           let cleanSelector = el.id ? `#${el.id}` : ''
           if (!cleanSelector && el.tagName.toLowerCase() === 'button' && el.innerText.trim()) {
             cleanSelector = `button:has-text("${el.innerText.trim().substring(0, 15)}")`
@@ -206,36 +229,32 @@ const ollamaAutomationHandler = async (model, prompt, history = [], page='', emb
           if(['input', 'select', 'textarea'].includes(el.tagName.toLowerCase())){
             el.setAttribute('label', el.parentElement?.innerText?.trim() || '')
           }
+          isoOptions = {}
+          if('select' == el.tagName.toLowerCase()){
+            let options = [...el.children].map((el)=>{
+                return el.innerText
+            })
+            isoOptions.option = options
+
+          }
           el.setAttribute('ai-interactive', elementCount)
           results.push({
             tagName: el.tagName.toLowerCase(),
             id: el.id || undefined,
             name: el.name,
             label: el.getAttribute('label'),
-            value: el.value,
             type: el.type,
             text: el.innerText.trim() || undefined,
             placeholder: el.getAttribute('placeholder') || undefined,
-            suggestedSelector: `${el.tagName.toLowerCase()}[ai-interactive="${elementCount}"]`
+            suggestedSelector: `${el.tagName.toLowerCase()}[ai-interactive="${elementCount}"]`,
+            ...isoOptions
           })
           elementCount += 1
-        }
       })
 
       // 2. Process table elements cleanly
       let elemCount = 0
       tableElements.forEach((el) => {
-        const rect = el.getBoundingClientRect()
-        const isInViewport = (
-          rect.top >= 0 &&
-          rect.left >= 0 &&
-          rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-          rect.right <= (window.innerWidth || document.documentElement.clientWidth) &&
-          rect.width > 0 &&
-          rect.height > 0
-        )
-
-        if (isInViewport) {
           let cleanSelector = el.id ? `#${el.id}` : ''
           if (!cleanSelector && el.tagName.toLowerCase() === 'button' && el.innerText.trim()) {
             cleanSelector = `button:has-text("${el.innerText.trim().substring(0, 15)}")`
@@ -252,7 +271,14 @@ const ollamaAutomationHandler = async (model, prompt, history = [], page='', emb
               }
             })
           }
+          isoOptions = {}
+          if('select' == el.tagName.toLowerCase()){
+            let options = [...document.getElementById('field_type').children].map((el)=>{
+                return el.innerText
+            })
+            isoOptions.option = options
 
+          }
           // Assign custom attribute for direct target matching
           el.setAttribute('extra-id', elemCount)
 
@@ -261,15 +287,13 @@ const ollamaAutomationHandler = async (model, prompt, history = [], page='', emb
             id: el.id || undefined,
             text: el.innerText.trim() || undefined,
             placeholder: el.getAttribute('placeholder') || undefined,
-            value: el.value,
             type: el.type,
-            // FIX: Replaced syntax error (=) with correct colon assignment (:)
             suggestedSelector: `${el.tagName.toLowerCase()}[extra-id="${elemCount}"]`,
-            rowContext: extras.length > 0 ? extras : undefined
+            rowContext: extras.length > 0 ? extras : undefined,
+            ...isoOptions
           })
           
           elemCount += 1
-        }
       })
 
       return results
