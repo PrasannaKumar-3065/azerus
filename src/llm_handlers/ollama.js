@@ -40,6 +40,10 @@ const availableTools = {
             return 'TOOL ERROR: ' + error
         }
     },
+    appendFile: async({filename, content}) => {
+        await fs.appendFile(filename, content)
+        return 'Data appended successfully!'
+    },
     // FIX 3: Fixed typo (_filename -> filename)
     removeFile: async ({filename}) => {
         try {
@@ -158,6 +162,21 @@ const tools = [
         function: {
             name: 'createFile',
             description: 'Create new file inside the configured directory',
+            parameters: {
+                type: 'object',
+                properties: {
+                    filename: {type: 'string', description: 'The name of the file'},
+                    content: {type: 'string', description: 'The text content to write inside the file.'}
+                },
+                required: ['filename', 'content']
+            }
+        }
+    },
+    {
+        type: 'function',
+        function: {
+            name: 'appendFile',
+            description: 'Append content to already existing file.',
             parameters: {
                 type: 'object',
                 properties: {
