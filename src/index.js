@@ -10,6 +10,7 @@ import chalk from 'chalk';
 import readline from 'readline';
 import ollamaHandler from './llm_handlers/ollama.js';
 import automationAgent from './agents/automation.js';
+import { planner } from './agents/planner.js';
 const program = new Command();
 
 program
@@ -57,9 +58,9 @@ program
 program
     .command('automation')
     .description('Enter a live, interactive sub-shell session with your agent')
-    .argument('[path]', 'path for instruction file.')
-    .action(async (filePath) => {
-        await automationAgent(filePath)
+    .argument('prompt', 'Prompt for the agent')
+    .action(async (prompt) => {
+        await planner(prompt)
     });
 
 program.parse();

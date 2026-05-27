@@ -1,5 +1,5 @@
 import crypto from 'crypto'
-import agentSession from "./session_manager.js"
+import agentSession, { startNewSession } from "./session_manager.js"
 
 const taskTemplate = {
   id: "",
@@ -15,8 +15,11 @@ const taskTemplate = {
 export class TaskManager{
     constructor(agentSession){
         var currentSession = agentSession.get('current_session')
-        var taskList = currentSession.get('taskList')
-        var sessionMemory = currentSession.get('session_memory')
+        if(!currentSession){
+            currentSession = startNewSession()
+        }
+        var taskList = currentSession.taskList
+        var sessionMemory = currentSession.session_memory
         this.agentSession = agentSession
         this.currentSession = currentSession
         this.taskList = taskList

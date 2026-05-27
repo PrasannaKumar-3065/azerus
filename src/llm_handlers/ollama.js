@@ -311,9 +311,13 @@ const ollamaToolHandler = async (model, prompt, history=[]) =>{
     }
 }
 
-const ollamaHandler = async (model, prompt) =>{
+const ollamaHandler = async (model, prompt, tools) =>{
     try{
-        let response = ollamaToolHandler(model, prompt)
+        let response = await ollama.chat({
+            model: model,
+            messages: prompt,
+            tools: tools
+        })
         return response
     }catch(error){
         console.error(chalk.red('Error Connecting OLLAMA: '+error))

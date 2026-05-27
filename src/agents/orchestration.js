@@ -81,7 +81,7 @@ const tools = [
         type: 'function',
         function: {
             name: 'BrowserAutomation',
-            description: 'Returns a summarized web results from multiple website',
+            description: 'Perform browser automation.',
             parameters: {
                 type: 'object',
                 properties: {
@@ -96,6 +96,24 @@ const tools = [
 const orchestration = (prompt) => {
     taskManager = TaskManager(agentSession)
     taskList = taskManager.taskList
+
+     let response = await ollama.chat({
+        model: model,
+        messages: [],
+        tools: tools
+    })
+    if(response.messages.content){
+        console.log(chalk.blue(response.messages.content))
+    }
+    if (response.message.tool_calls && response.message.tool_calls.length > 0){
+        [...response.message.tool_calls].map((tool)=>{
+            if(availableAgents[tool.function.name]){
+                var toolResult = availableAgents[tool.function.name](tool.function.arguments)
+                var toolResult = summarize(toolResult)
+
+            }
+        })
+    }
 
     while(taskList.length != 0){
         let response = await ollama.chat({
